@@ -7,11 +7,16 @@ function Button(props) {
 
   const navigate = useNavigate()
   const handleNavigate = () => {
-    navigate(props['nav'])
+    if (props['nav']) navigate(props['nav'])
+  }
+
+  const handleClick = () => {
+    handleNavigate()
+    if (props['func']) props['func']()
   }
 
   return (
-    <div className="button" onClick={handleNavigate} {...props}>{ props['text'] }</div>
+    <div className="button" onClick={handleClick} {...props}>{ props['text'] }</div>
   )
 }
 

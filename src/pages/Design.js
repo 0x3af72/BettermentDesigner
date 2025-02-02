@@ -1,7 +1,10 @@
 import React, { useRef, useState, useEffect } from 'react'
 import interact from 'interactjs'
 
+import Button from '../components/Button'
 import './Design.css'
+import compartmentTypes from '../data/compartment-types.json'
+import compartmentDefaultDims from '../data/compartment-default-dimensions.json'
 
 // Check if rects are intersecting
 function isIntersecting(rect1, rect2) {
@@ -13,55 +16,81 @@ function isIntersecting(rect1, rect2) {
   )
 }
 
-// Clip as close as possible
-function calculateClip(immoving, moving) {
-  let closestX = moving.left
-  let closestY = moving.top
+// Compartment creation menu
+const CompartmentCreation = ({ holderLength, holderWidth, mmToPixel, onCreateCompartment }) => {
 
-  if (
-    moving.left + moving.width > immoving.left &&
-    moving.left < immoving.left + immoving.width &&
-    moving.top + moving.height > immoving.top &&
-    moving.top < immoving.top + immoving.height
-  ) {
-    // Calculate the overlap in X and Y directions
-    const overlapX = Math.min(
-      Math.abs(moving.left + moving.width - immoving.left),
-      Math.abs(immoving.left + immoving.width - moving.left)
-    )
-    const overlapY = Math.min(
-      Math.abs(moving.top + moving.height - immoving.top),
-      Math.abs(immoving.top + immoving.height - moving.top)
-    )
+  const [compartmentType, setCompartmentType] = useState('')
+  const [length, setLength] = useState(1)
+  const [width, setWidth] = useState(1)
 
-    // Adjust the position to the closest valid position
-    if (overlapX < overlapY) {
-      // Move horizontally
-      if (moving.left < immoving.left) {
-        closestX = immoving.left - moving.width // Move left
-      } else {
-        closestX = immoving.left + immoving.width // Move right
-      }
-    } else {
-      // Move vertically
-      if (moving.top < immoving.top) {
-        closestY = immoving.top - moving.height // Move up
-      } else {
-        closestY = immoving.top + immoving.height // Move down
-      }
+  const handleCompartmentTypeChange = (event) => {
+
+    const newType = event.target.value
+
+    // Set default dimensions
+    if (compartmentDefaultDims.hasOwnProperty(newType)) {
+      const dims = compartmentDefaultDims[newType]
+      setLength(dims[0])
+      setWidth(dims[1])
     }
+    
+    setCompartmentType(event.target.value)
   }
 
-  return { left: closestX, top: closestY }
+  const handleLengthChange = (event) => {
+    setLength(event.target.value)
+  }
+
+  const handleWidthChange = (event) => {
+    setWidth(event.target.value)
+  }
+
+  const createCompartment = () => {
+    if (!compartmentType || compartmentType === 'Select...') return
+    onCreateCompartment({
+      id: Date.now().toString(),
+      text: compartmentType,
+      left: 0,
+      top: 0,
+      width: length * mmToPixel,
+      height: width * mmToPixel,
+      zIndex: 1000,
+    })
+  }
+
+  return (
+    <div id="compartmentCreation">
+      <label htmlFor="compartmentType">Compartment type:</label>
+      <select id="compartmentTypeSelect" name="compartmentType" value={compartmentType} onChange={handleCompartmentTypeChange}>
+        {compartmentTypes.map((type) => (
+          <option key={type} value={type}>{type}</option>
+        ))}
+      </select>
+      <br />
+      <label htmlFor="length">Compartment length ({length}mm):</label>
+      <input className="slider" type="range" id="length" name="length" min="1" max={holderLength - 40} value={length} onChange={handleLengthChange}/>
+      <br />
+      <label htmlFor="width">Compartment width ({width}mm):</label>
+      <input className="slider" type="range" id="width" name="width" min="1" max={holderWidth - 40} value={width} onChange={handleWidthChange} />
+      <Button func={createCompartment} text="Create" />
+    </div>
+  )
 }
 
 // Individual Compartment Component
-const Compartment = ({ id, text, left, top, width, height, onMove, isIntersecting, isMoving, anyMoving }) => {
+const Compartment = ({ id, text, left, top, width, height, onMove, isIntersecting, isMoving, zIndex }) => {
 
   const dragRef = useRef(null)
 
   useEffect(() => {
-    interact(dragRef.current).draggable({
+    interact(dragRef.current)
+    .draggable({
+      modifiers: [
+        interact.modifiers.restrictRect({
+          restriction: document.querySelector('#holderShadow'),
+          endOnly: false,
+        }),
+      ],
       listeners: {
         move: (event) => {
 
@@ -72,6 +101,9 @@ const Compartment = ({ id, text, left, top, width, height, onMove, isIntersectin
           onMove(id, x, y)
         },
       },
+    })
+    .on('tap', (event) => {
+      onMove(id, parseFloat(event.target.style.left), parseFloat(event.target.style.top))
     })
   }, [id, onMove])
 
@@ -85,7 +117,7 @@ const Compartment = ({ id, text, left, top, width, height, onMove, isIntersectin
         height: `${height}px`,
         backgroundColor: isIntersecting ? 'red' : 'white',
         cursor: 'move',
-        zIndex: isMoving ? 999 : 1,
+        zIndex: (zIndex && zIndex !== 1) ? zIndex : (isMoving ? 999 : 1),
       }}
       className="compartment"
     >
@@ -94,13 +126,22 @@ const Compartment = ({ id, text, left, top, width, height, onMove, isIntersectin
   )
 }
 
-const Holder = ({ width, height, compartments, onMoveCompartment, anyMoving }) => {
+const Holder = ({ width, height, compartments, onMoveCompartment, mmToPixel }) => {
 
   return (
     <div
       id="holder"
       style={{ width: `${width}px`, height: `${height}px`, }}
     >
+      <div
+      id="holderShadow"
+      style={{
+        width: `${width - 40 * mmToPixel}px`,
+        height: `${height - 40 * mmToPixel}px`,
+        top: `${20 * mmToPixel}px`,
+        left: `${20 * mmToPixel}px`,
+      }}
+      />
       {compartments.map((comp) => (
         <Compartment
           {...comp}
@@ -112,7 +153,6 @@ const Holder = ({ width, height, compartments, onMoveCompartment, anyMoving }) =
           onMove={onMoveCompartment}
           isIntersecting={comp.isIntersecting}
           isMoving={comp.isMoving}
-          anyMoving={anyMoving}
         />
       ))}
     </div>
@@ -124,13 +164,14 @@ function Design() {
   let holderDims = JSON.parse(localStorage['holderDims'])
 
   // Scale holder
+  const SCALE = 85
   let width, height
   if (holderDims.length > holderDims.width) {
-    width = 50
-    height = 50 * (holderDims.width / holderDims.length)
+    width = SCALE
+    height = SCALE * (holderDims.width / holderDims.length)
   } else {
-    height = 50
-    width = 50 * (holderDims.length / holderDims.width)
+    height = SCALE
+    width = SCALE * (holderDims.length / holderDims.width)
   }
   width *= window.innerHeight / 100
   height *= window.innerHeight / 100
@@ -138,66 +179,102 @@ function Design() {
   // Get ratio of mm to pixel
   const mmToPixel = height / holderDims.width
 
-  const [compartments, setCompartments] = useState([
-    { id: '1', text: 'Compartment 1', left: 50, top: 50, width: 100, height: 100 },
-    { id: '2', text: 'Compartment 2', left: 200, top: 200, width: 200, height: 50 },
-  ])
+  const [compartments, setCompartments] = useState([])
+  const createCompartment = (newCompartment) => {
+    const holderShadow = document.querySelector('#holderShadow')
+    const rect = holderShadow.getBoundingClientRect()
+    newCompartment.top += rect.top + window.scrollY
+    newCompartment.left += rect.left + window.scrollX
+    setCompartments((prevCompartments) => [...prevCompartments, newCompartment])
+  }
 
+  const [selectedCompartmentID, setSelectedCompartmentID] = useState(null)
   const onMoveCompartment = (id, x, y) => {
 
+    // Set selected compartment
+    console.log("set to", id)
+    setSelectedCompartmentID(id)
+
+    // O(n^2) but we should be fine
     setCompartments((prev) =>
       prev.map((comp) => {
 
         if (comp.id === id) {
-
-          let updatedComp = { ...comp, left: x, top: y, isMoving: true }
-
-          const { hasIntersect, toClip } = prev.reduce((acc, otherComp) => {
-
-            if (otherComp.id === id) return acc
-            const moving = { left: x, top: y, width: comp.width, height: comp.height }
-            const immoving = {
-              left: otherComp.left - 2 * mmToPixel, // Compartments must be 4mm apart
-              top: otherComp.top - 2 * mmToPixel,
-              width: otherComp.width + 4 * mmToPixel,
-              height: otherComp.height + 4 * mmToPixel
-            }
-
-            const hasIntersect = isIntersecting(moving, immoving)
-            if (hasIntersect) {
-              return {hasIntersect: true, toClip: calculateClip(immoving, moving)}
-            }
-            return acc
-
-          }, { hasIntersect: false, toClip: null })
-
-          updatedComp.isIntersecting = hasIntersect
-          console.log(toClip)
-          if (hasIntersect) {
-            updatedComp = { ...updatedComp, ...toClip }
-          }
-          return updatedComp
+          comp = { ...comp, left: x, top: y, isMoving: true }
+        } else {
+          comp = { ...comp, isMoving: false }
         }
 
-        return { ...comp, isMoving: false }
+        const hasIntersect = prev.reduce((acc, otherComp) => {
+
+          if (otherComp.id === comp.id) return acc
+          const moving = { left: comp.left, top: comp.top, width: comp.width, height: comp.height }
+          const immoving = {
+            left: otherComp.left - 2 * mmToPixel, // Compartments must be 4mm apart
+            top: otherComp.top - 2 * mmToPixel,
+            width: otherComp.width + 4 * mmToPixel,
+            height: otherComp.height + 4 * mmToPixel
+          }
+
+          const hasIntersect = isIntersecting(moving, immoving)
+          if (hasIntersect) {
+            return true
+          }
+          return acc
+
+        }, false)
+          
+        return { ...comp, isIntersecting: hasIntersect, zIndex: 1 }
       })
     )
   }
 
+  // Keyboard shortcuts
+  const deleteCurrentCompartment = () => {
+    setCompartments((prevCompartments) => prevCompartments.filter(compartment => compartment.id !== selectedCompartmentID))
+  }
+  const duplicateCurrentCompartment = () => {
+
+  }
+
+  // Handle keyboard events
+  useEffect(() => {
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'x' || event.key === 'X') {
+        console.log("deleting", selectedCompartmentID)
+        deleteCurrentCompartment()
+      } else if (event.key === 'd' || event.key === 'D') {
+        duplicateCurrentCompartment()
+      }
+    }
+
+    // Add event listener
+    document.addEventListener('keydown', handleKeyDown)
+
+    // Cleanup
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [])
+
   return (
-    <div id="canvas">
-      <div className="row">
-        <div className="dimension">
-          <span>{holderDims.width} mm</span>
-          <span className="arrow">↕</span>
+    <>
+      <CompartmentCreation onCreateCompartment={createCompartment} mmToPixel={mmToPixel} holderLength={holderDims.length} holderWidth={holderDims.width} />
+      <div id="canvas">
+        <div className="row">
+          <div className="dimension">
+            <span>{holderDims.width} mm</span>
+            <span className="arrow">↕</span>
+          </div>
+          <Holder mmToPixel={mmToPixel} width={width} height={height} compartments={compartments} onMoveCompartment={onMoveCompartment} />
         </div>
-        <Holder width={width} height={height} compartments={compartments} onMoveCompartment={onMoveCompartment} />
+        <div className="dimension" style={{ paddingLeft: "40px" }}>
+          <span>{holderDims.length} mm</span>
+          <span className="arrow">↔</span>
+        </div>
       </div>
-      <div className="dimension" style={{ paddingLeft: "40px" }}>
-        <span>{holderDims.length} mm</span>
-        <span className="arrow">↔</span>
-      </div>
-    </div>
+    </>
   )
 }
 

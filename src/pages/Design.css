@@ -29,4 +29,20 @@
 
 .compartment {
   border: 1px solid black;
+  -ms-touch-action: none;
+  touch-action: none;
+}
+
+#holderShadow {
+  position: relative;
+}
+
+.slider {
+
+}
+
+#compartmentCreation {
+  display: flex;
+  flex-direction: column;
+  width: 30vw;
 }
