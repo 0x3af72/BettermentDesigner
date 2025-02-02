@@ -1,0 +1,32 @@
+#holder {
+  margin: auto;
+  border: 2px solid black;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+}
+
+#canvas {
+  margin: auto;
+  width: fit-content;
+  height: fit-content;
+  user-select: none;
+}
+
+.dimension {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  margin: auto;
+}
+
+.arrow {
+  margin: 5px;
+}
+
+.compartment {
+  border: 1px solid black;
+}
