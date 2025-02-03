@@ -1,26 +1,63 @@
 #title {
-  font-size: 40px;
+  font-size: 2.5rem;
   font-weight: bold;
-  margin: auto;
+  text-align: center;
+  margin-bottom: 2rem;
 }
 
 .fieldInput {
   font-family: Poppins, sans-serif;
   font-weight: 400;
-  font-size: 20px;
+  font-size: 1.2rem;
   display: flex;
-  margin: auto;
+  flex-direction: column;
+  margin: 0.5rem 0;
 }
 
-#main {
-  width: 50%;
-  height: 50%;
+.fieldInput p {
+  margin-bottom: 0.5rem;
+}
+
+#homeMain {
+  width: 90%;
+  max-width: 600px; /* Limits max width for larger screens */
+  height: auto;
   margin: auto;
   display: flex;
   justify-content: center;
   flex-direction: column;
+  align-items: center;
+  padding: 2rem;
 }
 
-.button {
-  margin: auto;
+.centeredButton {
+  margin-top: 2rem;
+  width: 70%;
+  padding: 1rem;
+  text-align: center;
+}
+
+/* Mobile Responsive Adjustments */
+@media (max-width: 768px) {
+  #title {
+    font-size: 2rem; /* Adjust title size for smaller screens */
+  }
+
+  .fieldInput {
+    font-size: 1rem; /* Make input fields a bit smaller */
+  }
+
+  .centeredButton {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  #title {
+    font-size: 1.5rem;
+  }
+
+  .fieldInput {
+    font-size: 0.9rem; /* Further reduce font size */
+  }
 }

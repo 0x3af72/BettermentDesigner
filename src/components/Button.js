@@ -3,20 +3,20 @@ import { useNavigate } from 'react-router-dom'
 
 import './Button.css'
 
-function Button(props) {
+function Button({ nav, func, text, className, ...props }) {
 
   const navigate = useNavigate()
   const handleNavigate = () => {
-    if (props['nav']) navigate(props['nav'])
+    if (nav) navigate(nav)
   }
 
   const handleClick = () => {
     handleNavigate()
-    if (props['func']) props['func']()
+    if (func) func()
   }
 
   return (
-    <div className="button" onClick={handleClick} {...props}>{ props['text'] }</div>
+    <div  {...props} className={`button ${className || ''}`} onClick={handleClick}>{ text }</div>
   )
 }
 
