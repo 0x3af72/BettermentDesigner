@@ -33,7 +33,7 @@ const CompartmentCreation = ({ holderLength, holderWidth, mmToPixel, onCreateCom
       setLength(dims[0])
       setWidth(dims[1])
     }
-    
+
     setCompartmentType(event.target.value)
   }
 
@@ -192,7 +192,6 @@ function Design() {
   const onMoveCompartment = (id, x, y) => {
 
     // Set selected compartment
-    console.log("set to", id)
     setSelectedCompartmentID(id)
 
     // O(n^2) but we should be fine
@@ -242,7 +241,6 @@ function Design() {
 
     const handleKeyDown = (event) => {
       if (event.key === 'x' || event.key === 'X') {
-        console.log("deleting", selectedCompartmentID)
         deleteCurrentCompartment()
       } else if (event.key === 'd' || event.key === 'D') {
         duplicateCurrentCompartment()
@@ -256,7 +254,7 @@ function Design() {
     return () => {
       document.removeEventListener('keydown', handleKeyDown)
     }
-  }, [])
+  })
 
   return (
     <>

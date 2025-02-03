@@ -11,6 +11,7 @@ function Home() {
     height: 50,
     length: 50,
   })
+  localStorage.setItem('holderDims', JSON.stringify(holderDims))
 
   const handleChange = (e) => {
     const { name, value } = e.target
