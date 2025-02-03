@@ -51,7 +51,7 @@ const Controls = ({ deleteCurrentCompartment, duplicateCurrentCompartment, selec
         { selectedCompartmentID &&
           <>
             <span>[ESC to deselect compartment]</span>
-            <span>[Drag or use arrow keys to move compartment]</span>
+            <span>[Drag or use WASD keys to move compartment]</span>
             <span>[X to delete selected compartment]</span><Button text='delete' func={deleteCurrentCompartment} />
             <span>[C to duplicate selected compartment]</span><Button text='duplicate' func={duplicateCurrentCompartment} />
           </>
